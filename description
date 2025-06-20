@@ -1,0 +1,73 @@
+II. Project Statement
+You are given audio signals that represent the input message for the above system. The task is to design
+the block diagram in Figure 1 using MATLAB. The details are given as follows:
+i. The signals: stereo (2-channel) signals are provided to you in the baseband. The signals are stored in
+files with extension ‘wav’. You can read these files in MATLAB using the command ‘audioread’ or
+‘wavread’. For later processing, you will need to obtain the sampling frequency (which was used to
+digitize the recorded waves). The MATLAB function can return the sampling frequency. For more
+details, please refer to MATLAB Help.
+Each modulating signal (the messages) has two channels representing a stereo signal. You are going to
+implement a monophonic receiver so there is no need for two separate channels. You can form single
+channel stream by simply adding the two channels. Please note that the given signals are not of equal
+length. You can pad the short signals with zeros so they have all equal length.
+You can plot the spectrum of the signal using the ‘fft’ and ‘plot’ commands. You will have to adjust
+the axis scale so the signal spectrum is plotted versus frequency. By doing so, you can estimate the
+bandwidth of the signal. You will use this bandwidth value when you design the filters. You may find
+the following MATLAB tutorial useful:
+http://www.ee.nmt.edu/~elosery/matlab/matlab.pdf
+ii. The AM modulator: the modulation type is DSB-SC for all the signals. The first signal is modulated
+with 100 KHz carrier. Each following signal is modulated with a carrier of frequency
+ωn = 100 + nΔF, where ΔF = 50 KHz and the index n is the signal index (n = 0 for the first signal
+that is modulated at 100 KHz). The modulated signals are used to construct an FDM signal (FDM:
+frequency division multiplexing). You can start writing your program using two modulating messages.
+Multiplexing more than two signals is optional.
+Note that the values of the carrier frequencies are smaller than the actual AM/FM transmission values
+that are in the order of megahertz. The small values of the carrier frequencies used in this project were
+chosen to reduce the simulation complexity. You may still face some problems due to the audio file
+length; if this happens you may take half or quarter the size of the file.
+Another important simulation parameter is the sampling frequency Fs as mentioned before. You should
+obtain Fs using the ‘wavread’ command. Now, if you want to modulate a signal, generate the carrier:
+cos(ωnt) which, in the discrete domain (in MATLAB environment), is generated as cos(ωnnTS
+)
+
+where TS
+is the sampling interval. This could simply be TS = 1/Fs
+
+. However, if the carrier frequency
+
+Fn =
+ωn
+2π
+turns out to be greater than FS/2 then we cannot use the given Fs as this will violate the
+Nyquist criteria.
+One solution is to increase the sampling frequency FS
+
+, say by 10 times. This is effectively done by
+increasing the number of samples of the modulating signals. That is, if the modulating signals are of
+size Nwhich is obtained using a sampling frequency Fs
+
+, then increasing the number of samples to 10N
+
+is equivalent to increasing the sampling frequency to 10FS
+
+(or reducing the sampling interval to TS
+10
+).
+To increase the number of samples of the modulating signals you can use ‘interp’ command in
+MATLAB which interpolates the signal to obtain more samples.
+iii. The wireless channel: in real life the modulated FDM signal is transmitted over the air from the base
+station. Simulating this wireless channel is out of the scope of this project. So you are not going to do
+anything for this part. You can go immediately to the receiver.
+iv. The RF stage: As discussed in the lecture, this is the stage that performs interference-image rejection.
+For simplicity, this stage will be implemented as a band-pass Filter (BPF) only, centered at the carrier
+frequency ωn (that is tunable at the desired station). You can refer to MathWorks tutorial for the
+design of BPF in MATLAB:
+https://uk.mathworks.com/help/signal/gs/design-a-filter-using-fdesign.html
+v. The Oscillator: this is the generator for a carrier frequency ωc + ωIF, where ωc = ωn + nΔF. The IF
+frequency ωIF = 25 KHz. The mixer is a simple multiplier in this simulation.
+vi. The IF stage: similar to the RF stage, this stage is simply modeled as a band-pass filter only, centered
+at the center frequency ωIF.
+vii. The Baseband detection: this is the final stage where the signal is obtained in the baseband. This stage
+thus involves mixing with a carrier of suitable frequency (it is easy to guess its value) and filtering the
+signal using a low-pass filter (LPF). The design of LPF can be done similarly to the BPF. You can
+browse MATLAB Help for the command ‘fdesign.lowpass’
