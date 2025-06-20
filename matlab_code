@@ -1,0 +1,505 @@
+%{
+Input Message: stereo (2-channel) signal
+first, we are going to prepare the message signals before modulating it
+%}
+%{
+we are going to take message(i) and save its sampling frequency
+in fs(i) and check its value to see if there is any need for upsampling
+%}
+[message1, fs1] = audioread('Short_QuranPalestine.wav');  % Load audio1
+[message2, fs2] = audioread('Short_SkyNewsArabia.wav');   % Load audio2
+[message3, fs3] = audioread('Short_BBCArabic2.wav');   % Load audio3
+[message4, fs4] = audioread('Short_FM9090.wav');   % Load audio3
+disp(['Sampling Frequency of first message: ', num2str(fs1), ' Hz']);
+disp(['Sampling Frequency of second message: ', num2str(fs2), ' Hz']);
+disp(['Sampling Frequency of third message: ', num2str(fs3), ' Hz']);
+disp(['Sampling Frequency of fourh message: ', num2str(fs4), ' Hz']);
+ 
+ 
+%{
+UPSAMPLING to avoid aliasing and 
+make sure the all have the same sampling frequency
+%}
+% Define the desired sampling frequency
+fs_desired = 441000;
+ 
+% Interpolate message1 to the desired sampling frequency
+t_original1 = (0:length(message1)-1) / fs1;               % Original time vector
+t_desired1 = (0:1/fs_desired:(length(message1)-1)/fs1);   % New time vector
+message1 = interp1(t_original1, message1, t_desired1, 'linear'); % Interpolate
+ 
+% Interpolate message2 to the desired sampling frequency
+t_original2 = (0:length(message2)-1) / fs2;               % Original time vector
+t_desired2 = (0:1/fs_desired:(length(message2)-1)/fs2);   % New time vector
+message2 = interp1(t_original2, message2, t_desired2, 'linear'); % Interpolate
+ 
+% Interpolate message3 to the desired sampling frequency
+t_original3 = (0:length(message3)-1) / fs3;               % Original time vector
+t_desired3 = (0:1/fs_desired:(length(message3)-1)/fs3);   % New time vector
+message3 = interp1(t_original3, message3, t_desired3, 'linear'); % Interpolate
+ 
+% Interpolate message4 to the desired sampling frequency
+t_original4 = (0:length(message4)-1) / fs4;               % Original time vector
+t_desired4 = (0:1/fs_desired:(length(message4)-1)/fs4);   % New time vector
+message4 = interp1(t_original4, message4, t_desired4, 'linear'); % Interpolate
+ 
+ 
+%{
+for padding:
+we are padding the short signals with zeros so they have all equal length.
+%}
+ 
+disp("before padding");
+disp(['Number of Samples of message 1: ', num2str(length(message1))]);
+disp(['Number of Samples of message 2: ', num2str(length(message2))]);
+disp(['Number of Samples of message 3: ', num2str(length(message3))]);
+disp(['Number of Samples of message 4: ', num2str(length(message4))]);
+%first we are goning to get the max length of all messages
+%so we can relate the other messages to it
+% Find the length of the longest signal
+max_length = max([length(message1), length(message2), length(message3), length(message4)]);
+% Pad message1 if it's shorter than the longest signal
+if length(message1) < max_length
+    message1 = [message1; zeros(max_length - length(message1), size(message1, 2))];
+end
+% Pad message2 if it's shorter than the longest signal
+if length(message2) < max_length
+    message2 = [message2; zeros(max_length - length(message2), size(message2, 2))];
+end
+% Pad message3 if it's shorter than the longest signal
+if length(message3) < max_length
+    message3 = [message3; zeros(max_length - length(message3), size(message3, 2))];
+end
+if length(message4) < max_length
+    message4 = [message4; zeros(max_length - length(message4), size(message4, 2))];
+end
+ 
+ 
+%just to make sure they are all the same length
+disp("after padding");
+disp(['Number of Samples of message 1: ', num2str(length(message1))]);
+disp(['Number of Samples of message 2: ', num2str(length(message2))]);
+disp(['Number of Samples of message 3: ', num2str(length(message3))]);
+disp(['Number of Samples of message 4: ', num2str(length(message4))]);
+%save the length in a variable
+number_of_samples = length(message2);
+ 
+ 
+%{
+since we are a monophonic receiver so there is no need for two separate channels
+so we will form single channel stream 
+%}
+ 
+message1_mono = sum(message1, 2);  % Add the two channels of signal 1
+message2_mono = sum(message2, 2);  % Add the two channels of signal 2
+message3_mono = sum(message3, 2);  % Add the two channels of signal 3
+ 
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(message1_mono));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Short QuranPalestine (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+ 
+% Time vector
+t = (0:number_of_samples-1) / fs_desired;
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,message1_mono);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Short QuranPalestine (Time Domain)');
+grid on;
+ 
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(message2_mono));
+figure;
+% First subplot: Spectrum of the signal
+%subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Short SkyNewsArabia (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+figure;
+%subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,message2_mono);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Short SkyNewsArabia (Time Domain)');
+grid on;
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(message3_mono));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Short BBCArabic2 (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,message3_mono);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Short BBCArabic2 (Time Domain)');
+grid on;
+ 
+%{
+The AM modulator:
+we are going to prefom amplitude modulation for the three messages 
+%}
+ 
+%choosing the carrier frequency
+fc1=100e3;
+fc2=150e3;
+fc3=200e3;
+t = (0:number_of_samples-1)' / fs_desired;
+carrier1 = cos(2 * pi * fc1 * t);
+carrier2 = cos(2 * pi * fc2 * t);
+carrier3 = cos(2 * pi * fc3 * t);
+ 
+%{
+to ensure the multiplication matrix will not exceed its size and
+the message signals and carriers have compatible dimensions
+%}
+ 
+if size(message1_mono, 2) ~= size(carrier1, 2)
+    carrier1 = carrier1';  % Transpose the carrier to match the signal's dimensions
+end
+ 
+if size(message2_mono, 2) ~= size(carrier2, 2)
+    carrier2 = carrier2';  % Transpose the carrier to match the signal's dimensions
+end
+ 
+if size(message3_mono, 2) ~= size(carrier3, 2)
+    carrier3 = carrier3';  % Transpose the carrier to match the signal's dimensions
+end
+ 
+%we multiplied the signal by two because when we multiply by cos in time
+%its convolution in frequency and the amplitude is decreased by 2
+%multiplying the message to the carrier
+modulated1= 2* message1_mono .* carrier1;
+modulated2= 2* message2_mono .* carrier2;
+modulated3= 2* message3_mono .* carrier3;
+ 
+ 
+%plotting the modulated signal
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(modulated1));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('modulated_signal 1 (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,modulated1);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('modulated_signal1 (Time Domain)');
+grid on;
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(modulated2));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('modulated_signal 2 (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,modulated2);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('modulated_signal 2 (Time Domain)');
+grid on;
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(modulated3));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('modulated_signal 3 (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,modulated3);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('modulated_signal 3 (Time Domain)');
+grid on;
+modulated_signal= modulated1 + modulated2 + modulated3 ;
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(modulated_signal));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('modulated_signal  (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,modulated_signal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('modulated_signal (Time Domain)');
+grid on;
+ 
+%{
+THE RF STAGE
+%}
+%{
+from simulation 
+BW1 = 35e3;
+BW2 = 18e3;
+BW3 = 20e3;
+%}
+%choose the required signal%
+% Assume user input for selecting the channel
+channel_choice = input('Enter channel choice (1 for message1, 2 for message2, 3 for message3:  ');
+ 
+% Load the selected signal based on user input
+switch channel_choice
+    case 1
+        selected_signal = message1; % Choose message1
+        BW = 35e3; % Bandwidth for message1
+        fc=100e3;
+        fs_resampled=fs1;
+    case 2
+        selected_signal = message2; % Choose message2
+        BW = 10e3; % Bandwidth for message2
+        fc=150e3;
+        fs_resampled=fs2;
+ 
+    case 3
+        selected_signal = message3; % Choose message3
+        BW = 15e3; % Bandwidth for message3
+        fc=200e3;
+        fs_resampled=fs3;
+  
+    otherwise
+        disp('Invalid choice. Defaulting to message1.');
+        selected_signal = message1; % Default to message1
+        BW = 35e3; % Default bandwidth
+      
+end
+ 
+% Center frequency and cutoff frequencies
+f_low = fc - BW/2 ; % Lower cutoff frequency (75 kHz)
+f_high = fc + BW/2; % Upper cutoff frequency (175 kHz)
+ 
+% Normalize frequencies (divide by Nyquist frequency, fs/2)
+f_low_norm = f_low / (fs_desired / 2); % Lower normalized cutoff
+f_high_norm = f_high / (fs_desired / 2); % Upper normalized cutoff
+ 
+% Create a Band-Pass Filter specification object
+bpf_spec = fdesign.bandpass('N,F3dB1,F3dB2', 8, f_low_norm, f_high_norm);
+ 
+% Design the filter (Butterworth as an example)
+bpf = design(bpf_spec, 'butter');
+ 
+% Apply the filter to the modulated signal
+RF_filtered_signal1 = filter(bpf, modulated_signal);
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Compute the spectrum of the signal
+Y_mixed = fftshift(fft(RF_filtered_signal1));
+% Create a single figure with two subplots
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title(' RF STAGE (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t, RF_filtered_signal1);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title(' RF STAGE (Time Domain)');
+grid on;
+ 
+ 
+%{
+The MIXER stage
+%}
+f_IF=25e3;
+% Oscillator carrier for the mixer
+%if the receiver oscillator has frequency offset by 0.2 KHz and 1.2 KHz
+oscillator_LOW = cos(2 * pi * (fc + f_IF ) * t);
+%to ensure matrix size is compatible  
+if size(RF_filtered_signal1, 2) ~= size(oscillator_LOW, 2)
+    oscillator_LOW = oscillator_LOW';  % Transpose the carrier to match the signal's dimensions
+end
+ 
+%we multiplied the signal by two because when we multiply by cos in time
+%its convolution in frequency and the amplitude is decreased by 2
+signal1_if = 2 * RF_filtered_signal1 .*oscillator_LOW ;
+ 
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Plot the spectrum of the mixed signal
+Y_mixed = fftshift(fft(signal1_if));
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title(' OUTPUT OF MIXER STAGE  (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,signal1_if);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('OUTPUT OF  MIXER STAGE (Time Domain)');
+grid on;
+ 
+ 
+%{
+THE IF STAGE
+%}
+%{
+this stage is modeled as a band-pass filter only, centered 
+at the center frequency ??F
+%}
+% Center frequency and cutoff frequencies
+f_low = f_IF - BW/2 ; % Lower cutoff frequency 
+f_high = f_IF + BW/2; % Upper cutoff frequency 
+% Normalize frequencies (divide by Nyquist frequency, fs/2)
+f_low_norm = f_low / (fs_desired / 2); % Lower normalized cutoff
+f_high_norm = f_high / (fs_desired / 2); % Upper normalized cutoff
+% Create a Band-Pass Filter specification object
+bpf_spec = fdesign.bandpass('N,F3dB1,F3dB2', 8, f_low_norm, f_high_norm);
+% Design the filter (Butterworth as an example)
+bpf = design(bpf_spec, 'butter');
+% Apply the filter to the signal
+IF_filtered_signal = filter(bpf, signal1_if);
+ 
+ 
+% Plot the spectrum 
+Y_mixed = fftshift(fft(IF_filtered_signal));
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Create a single figure with two subplots
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(Y_mixed));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title(' OUTPUT OF IF STAGE  (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t,IF_filtered_signal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('OUTPUT OF IF STAGE (Time Domain)');
+grid on;
+ 
+ 
+ 
+%{
+The Baseband detection
+%}
+% Oscillator carrier for the mixer
+BASEDBAND_OSCILLATOR = cos(2 * pi * ( f_IF) * t);
+if size(IF_filtered_signal, 2) ~= size(BASEDBAND_OSCILLATOR , 2)
+    BASEDBAND_OSCILLATOR= BASEDBAND_OSCILLATOR';  % Transpose the carrier to match the signal's dimensions
+end
+ 
+ 
+BASED_SIGNAL = 2 * IF_filtered_signal .*BASEDBAND_OSCILLATOR;
+ 
+% Center frequency and cutoff frequency
+fc = 0;            
+f_cutoff = fc + BW / 2;
+ 
+% Normalize cutoff frequency (divide by Nyquist frequency, fs/2)
+f_cutoff_norm = f_cutoff / (fs_desired / 2); % Normalized cutoff frequency
+ 
+ 
+% Create a Low-Pass Filter specification object
+lpf_spec = fdesign.lowpass('N,F3dB', 8, f_cutoff_norm);
+ 
+% Design the filter (Butterworth as an example)
+lpf = design(lpf_spec, 'butter');
+ 
+ 
+% Apply the filter to the modulated signal
+BB_filtered_signal = filter(lpf, BASED_SIGNAL);
+ 
+% Frequency axis for the spectrum
+f = (-number_of_samples/2:number_of_samples/2-1) * (fs_desired / number_of_samples);
+% Create a single figure with two subplots
+figure;
+% First subplot: Spectrum of the signal
+subplot(2, 1, 1); % 2 rows, 1 column, first plot
+plot(f, abs(fftshift(fft(BB_filtered_signal))));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('BASEBAND SIGNAL (Frequency Domain)');
+grid on;
+% Second subplot: Signal in the time domain
+subplot(2, 1, 2); % 2 rows, 1 column, second plot
+plot(t, BB_filtered_signal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('BASEBAND SIGNAL (time Domain)');
+grid on;
+ 
+ 
+ 
+BB_filtered_signal_resampled = resample(BASED_SIGNAL, fs_resampled, fs_desired );
+ 
+% Normalize the signal to the range [-1, 1]
+BB_filtered_signal_resampled = BB_filtered_signal_resampled / max(abs(BB_filtered_signal_resampled));
+ 
+% Save the audio signal to a file
+%audiowrite('demodulated_signal.wav', BB_filtered_signal_resampled,fs_resampled);
+ 
+% Play the resampled signal
+%sound(BB_filtered_signal_resampled,fs_resampled);
